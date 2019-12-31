@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<!-- MERINDA -->
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Galaxy War</title>
+    <style>
+
+    * {
+        font-family:"微軟正黑體";
+        font-size: 1.02em;
+    }
+
+    body {
+        background-image: url("./materials/solarSystem2.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;  
+    }
+    /* 先設一個div作為遊戲的範圍 */    
+    #game {
+        width: 555px;
+        height: 555px;
+        margin: auto;    
+        cursor: url(./materials/cursor2.png) 25 25, auto;
+        overflow: hidden;
+        position: relative;
+        z-index: 10;          
+    } 
+    
+    /* 設定外星人 */
+    #game img {
+        height: 60px;
+        position: absolute;
+    }
+
+    .radar-screen {
+        z-index: 10;     
+        width: 555px;
+        height: 555px;
+        background-image: url("./materials/radar-screen2.png");  
+        background-repeat: no-repeat;
+        background-size: cover;  
+    }
+    
+    .scan {
+    z-index: 1;
+    position: absolute;
+    width: 45%; 
+    left: 6%;
+    height: 3px;
+
+    background-color: rgba(38, 189, 63, 0.9);
+    top: calc(50% - 2px);     
+    transform-origin: right center; 
+        animation-name: radarScan;
+        animation-duration:5s;
+        animation-timing-function: linear;
+        animation-direction: normal;
+        animation-iteration-count: infinite;
+}
+
+ @keyframes radarScan{
+        0% { transform: rotate(0deg);    }
+        100% { transform: rotate(360deg);  }
+    } 
+
+.radar-info {
+    z-index:10;
+    position: absolute;
+    width: 100vw;
+    height:650px;
+    background-color: transparent;
+    background-image: url(./materials/radar-info2.png);
+    animation-name: radarInfo;
+    animation-duration: 10s;
+    animation-direction: normal;
+    animation-iteration-count: infinite;
+    pointer-events: none;
+}
+
+@keyframes radarInfo {
+    0% { left:0; top:0;  }    
+    /* 10% { left:0; top:60px; opacity:0.5;    } */
+    100% { left:0; top:100px; opacity:0.9;  }
+
+}
+
+.record {
+        color: white;
+        width: 500px;
+        position: center;
+        background-color: olivedrab;
+        text-align: center;
+        margin-left:10px;
+        border-radius: 25px;
+        padding: 10px;
+
+    }
+
+    input[type] {
+        background-color: red;
+        border-radius: 25px;
+        color: white;
+    }
+    
+    </style>
+</head>
+
+
+
+<body>
+    <div class="record">        
+        <table width="500px">
+            <tr>
+                <td colspan="2"><input type="button" style="radius:25px;"
+                    value="遊戲開始" 
+                    id="start">
+                </td>
+                <td>分數：</td>
+                <td><span id="score">0</span>分</td>
+                <td>剩餘時間：</td>
+                <td><span id="sec">0</span>秒</td>            
+            </tr>    
+        </table>
+    </div>
+
+
+    <div class=radar-info>  </div>
+    <div id="game">
+        <div class="radar-screen"></div>
+        <div class="scan"></div>
+    </div>
+
+
+
+<script src="./jquery-3.4.1.min.js"></script>    
+<script>
+    $(function (){
+        // 宣告分數score、遊戲時間sec
+        let score= 0;
+        let sec= 10;
+
+        let gametimer= 0;
+        let UFOid= 0;
+
+        let rand =(num) => {
+            return Math.round(Math.random()*num);
+        }
+
+        //設定外星人移動____________________________
+        let UFOmove = (id) => {
+            //function語法的箭頭不能斷
+            $(`#UFO${id}`).animate ({
+                left: rand(50)+"%", 
+                top: rand(50)+"%"
+            }, 4000, function () {
+                UFOmove(id);
+            })
+        }
+
+        //遊戲開始
+        // ______________________計時器設定_______________________________________
+        $("#start").on("click", function(){
+            $(this).attr("disabled", true);
+
+            sec= 10;
+            $("#sec").text(sec);
+            score= 0;
+            $("#score").text(score);            
+            
+  
+            gametimer= setInterval(()=>{
+
+                sec--; 
+                $("#sec").text(sec);
+
+                //如果秒數到0
+                if(sec==0) {
+                    clearInterval(gametimer);
+                    $(this).attr("disabled", false);
+                    // 時間到時，清除timer，這個動作也要把attr的 disabled 改為false
+                    // 表示start按鈕又可以使用了
+                    setTimeout( ()=> {
+                        alert ("時間到");
+                        // 時間到時，設清除 img
+                        $("#game img").remove();    
+                        // #game容器裡的img，要實行移除 img                    
+                    }, 100)
+                }
+
+                let num= rand(10);
+                if(num > 0 ) {
+                    // 給每個外星人一個id，個別位移, 隨機數 1-10
+                    $("#game").append(`<img src="./materials/ufo2mm.png" id="UFO${UFOid}">`);
+                        $(`#UFO${UFOid}`).css({ 
+                            left: rand(100)+"%", 
+                            top: rand(100)+"%"
+                        });
+                        UFOmove(UFOid);
+                        UFOid++;
+                        // 設fucntionb讓外星人移動，先move之後，再UFOid++            
+                }
+            }, 1000)
+        })
+
+        $("#game").on("click", "img",function(){
+             //onclick再判斷點到的是img，讓JQ過濾
+            $(this).attr("src", "./materials/explode.png");
+            $(this).stop();
+            $(this).css("pointer-events", "none");
+            $(this).fadeOut(1000);          
+            score++;
+            $("#score").text(score);
+        })
+
+    })
+</script>
+    
+</body>
+</html>
